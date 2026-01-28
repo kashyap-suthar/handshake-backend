@@ -2,6 +2,7 @@ const { Challenge, User } = require('../models');
 const { CHALLENGE_STATES, DEFAULTS } = require('../utils/constants');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 const logger = require('../utils/logger');
+const notificationService = require('./NotificationService');
 
 /**
  * Challenge Service - CRUD operations for challenges
@@ -51,6 +52,46 @@ class ChallengeService {
             });
 
             logger.info(`Challenge created: ${challenge.id} (${challenger.username} → ${challenged.username})`);
+
+            // Emit WebSocket event to notify challenged user
+            try {
+                const { io } = require('../server');
+                if (io) {
+                    const eventData = {
+                        challengeId: challenge.id,
+                        challenger: {
+                            id: challenger.id,
+                            username: challenger.username,
+                        },
+                        gameType: challenge.gameType,
+                        createdAt: challenge.createdAt,
+                    };
+
+                    // Emit to challenged user's room
+                    io.to(`user:${challengedId}`).emit('challenge:received', eventData);
+                    logger.debug(`Emitted challenge:received event to user:${challengedId}`);
+                }
+            } catch (socketError) {
+                // Don't fail challenge creation if socket emission fails
+                logger.warn('Failed to emit challenge:received event:', socketError.message);
+            }
+
+            // Send push notification to challenged user (works even if app is killed)
+            try {
+                await notificationService.sendWakeUpNotification(challengedId, {
+                    challengeId: challenge.id,
+                    challenger: {
+                        id: challenger.id,
+                        username: challenger.username,
+                    },
+                    gameType: challenge.gameType,
+                });
+                logger.debug(`Push notification sent to user:${challengedId}`);
+            } catch (notificationError) {
+                // Don't fail challenge creation if notification fails
+                logger.warn('Failed to send push notification:', notificationError.message);
+            }
+
             return challenge;
         } catch (error) {
             logger.error('Failed to create challenge:', error);

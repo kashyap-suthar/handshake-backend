@@ -20,6 +20,7 @@ const authRoutes = require('./routes/auth.routes');
 const challengeRoutes = require('./routes/challenges.routes');
 const presenceRoutes = require('./routes/presence.routes');
 const sessionRoutes = require('./routes/sessions.routes');
+const userRoutes = require('./routes/users.routes');
 
 // Import socket handlers
 const { setupHandshakeSocket } = require('./sockets/handshakeSocket');
@@ -71,6 +72,7 @@ app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/challenges`, apiLimiter, challengeRoutes);
 app.use(`/api/${API_VERSION}/presence`, apiLimiter, presenceRoutes);
 app.use(`/api/${API_VERSION}/sessions`, apiLimiter, sessionRoutes);
+app.use(`/api/${API_VERSION}/users`, apiLimiter, userRoutes);
 
 /**
  * 404 handler

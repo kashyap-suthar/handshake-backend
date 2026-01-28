@@ -36,10 +36,10 @@ class NotificationService {
                     body: `${challenger.username} wants to play ${gameType} with you!`,
                 },
                 data: {
-                    type: 'CHALLENGE_WAKE_UP',
+                    type: 'WAKE_UP',
                     challengeId,
                     challengerId: challenger.id,
-                    challengerUsername: challenger.username,
+                    challenger: challenger.username,
                     gameType,
                     timestamp: Date.now().toString(),
                 },
@@ -48,7 +48,7 @@ class NotificationService {
                     priority: 'high',
                     notification: {
                         priority: 'high',
-                        channelId: 'game_challenges',
+                        channelId: 'handshake-wake-up',
                         sound: 'default',
                         defaultSound: true,
                         defaultVibrateTimings: true,

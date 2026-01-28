@@ -67,7 +67,7 @@ const validateChallengeResponse = [
 ];
 
 const validateDeviceToken = [
-    body('token')
+    body('fcm_token')
         .trim()
         .notEmpty()
         .withMessage('Device token required'),

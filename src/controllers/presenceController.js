@@ -7,10 +7,10 @@ const logger = require('../utils/logger');
  */
 const registerDevice = async (req, res, next) => {
     try {
-        const { token, platform } = req.body;
+        const { fcm_token, platform } = req.body;
         const userId = req.user.id;
 
-        await NotificationService.registerDeviceToken(userId, token);
+        await NotificationService.registerDeviceToken(userId, fcm_token);
 
         logger.info(`Device token registered for user ${req.user.username} (platform: ${platform || 'unknown'})`);
 
@@ -28,10 +28,10 @@ const registerDevice = async (req, res, next) => {
  */
 const unregisterDevice = async (req, res, next) => {
     try {
-        const { token } = req.body;
+        const { fcm_token } = req.body;
         const userId = req.user.id;
 
-        await NotificationService.unregisterDeviceToken(userId, token);
+        await NotificationService.unregisterDeviceToken(userId, fcm_token);
 
         res.json({
             success: true,
