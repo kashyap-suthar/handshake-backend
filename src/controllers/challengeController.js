@@ -1,6 +1,7 @@
 const ChallengeService = require('../services/ChallengeService');
 const HandshakeService = require('../services/HandshakeService');
 const logger = require('../utils/logger');
+const { CHALLENGE_STATES } = require('../utils/constants');
 
 /**
  * Create a new challenge
@@ -114,10 +115,68 @@ const getPendingChallenges = async (req, res, next) => {
     }
 };
 
+/**
+ * Decline a challenge (by challenged user)
+ */
+const declineChallenge = async (req, res, next) => {
+    try {
+        const { id: challengeId } = req.params;
+        const userId = req.user.id;
+
+        logger.info(`User ${req.user.username} declining challenge ${challengeId}`);
+
+        // Get challenge to validate
+        const challenge = await ChallengeService.getChallenge(challengeId, true);
+
+        // Validate user is the challenged user
+        if (challenge.challengedId !== userId) {
+            return res.status(403).json({
+                success: false,
+                error: 'Only the challenged user can decline',
+            });
+        }
+
+        // Validate state allows decline
+        if (challenge.state !== CHALLENGE_STATES.PENDING) {
+            return res.status(400).json({
+                success: false,
+                error: `Cannot decline challenge in ${challenge.state} state`,
+            });
+        }
+
+        // Update state to declined
+        await ChallengeService.updateChallengeState(challengeId, CHALLENGE_STATES.DECLINED);
+
+        // Notify challenger via WebSocket
+        try {
+            const { io } = require('../server');
+            if (io) {
+                io.to(`user:${challenge.challengerId}`).emit('challenge:declined', {
+                    challengeId,
+                    declinedBy: {
+                        id: userId,
+                        username: req.user.username,
+                    },
+                });
+            }
+        } catch (socketError) {
+            logger.warn('Failed to emit challenge:declined event:', socketError.message);
+        }
+
+        res.json({
+            success: true,
+            message: 'Challenge declined',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createChallenge,
     acceptChallenge,
     respondToChallenge,
     getChallenge,
     getPendingChallenges,
+    declineChallenge,
 };

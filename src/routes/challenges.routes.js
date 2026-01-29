@@ -5,6 +5,7 @@ const {
     respondToChallenge,
     getChallenge,
     getPendingChallenges,
+    declineChallenge,
 } = require('../controllers/challengeController');
 const { authenticateJWT } = require('../middleware/auth');
 const {
@@ -30,6 +31,9 @@ router.get('/:id', validateUUID, getChallenge);
 
 // Accept challenge (triggers handshake)
 router.post('/:id/accept', validateUUID, acceptChallenge);
+
+// Decline challenge (by challenged user)
+router.post('/:id/decline', validateUUID, declineChallenge);
 
 // Respond to wake-up (Accept/Decline)
 router.post('/:id/respond', validateUUID, validateChallengeResponse, respondToChallenge);
