@@ -1,7 +1,3 @@
-/**
- * Application constants and enums
- */
-
 const CHALLENGE_STATES = {
     PENDING: 'PENDING',
     NOTIFYING: 'NOTIFYING',
@@ -23,7 +19,6 @@ const HANDSHAKE_RESPONSE = {
     DECLINE: 'DECLINE',
 };
 
-// Valid state transitions for challenges
 const CHALLENGE_STATE_TRANSITIONS = {
     [CHALLENGE_STATES.PENDING]: [CHALLENGE_STATES.NOTIFYING, CHALLENGE_STATES.EXPIRED, CHALLENGE_STATES.DECLINED],
     [CHALLENGE_STATES.NOTIFYING]: [CHALLENGE_STATES.WAITING_RESPONSE],
@@ -32,13 +27,12 @@ const CHALLENGE_STATE_TRANSITIONS = {
         CHALLENGE_STATES.DECLINED,
         CHALLENGE_STATES.TIMEOUT,
     ],
-    [CHALLENGE_STATES.ACTIVE]: [CHALLENGE_STATES.ACTIVE], // No transitions once active
+    [CHALLENGE_STATES.ACTIVE]: [CHALLENGE_STATES.ACTIVE],
     [CHALLENGE_STATES.DECLINED]: [],
     [CHALLENGE_STATES.TIMEOUT]: [],
     [CHALLENGE_STATES.EXPIRED]: [],
 };
 
-// Socket events
 const SOCKET_EVENTS = {
     CONNECTION: 'connection',
     DISCONNECT: 'disconnect',
@@ -53,14 +47,12 @@ const SOCKET_EVENTS = {
     ERROR: 'error',
 };
 
-// Job queue names
 const JOB_QUEUES = {
     HANDSHAKE_TIMEOUT: 'handshake-timeout',
     CHALLENGE_CLEANUP: 'challenge-cleanup',
     NOTIFICATION_RETRY: 'notification-retry',
 };
 
-// Redis key prefixes
 const REDIS_KEYS = {
     PRESENCE: 'presence',
     CHALLENGE: 'challenge',
@@ -70,7 +62,6 @@ const REDIS_KEYS = {
     LOCK: 'lock',
 };
 
-// Default values
 const DEFAULTS = {
     CHALLENGE_EXPIRATION_SECONDS: parseInt(process.env.CHALLENGE_EXPIRATION_SECONDS, 10) || 3600,
     HANDSHAKE_TIMEOUT_SECONDS: parseInt(process.env.HANDSHAKE_TIMEOUT_SECONDS, 10) || 30,

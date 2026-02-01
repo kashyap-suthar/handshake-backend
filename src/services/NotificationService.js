@@ -2,16 +2,7 @@ const { getMessaging } = require('../config/firebase');
 const { User } = require('../models');
 const logger = require('../utils/logger');
 
-/**
- * Notification Service - Send FCM push notifications
- */
 class NotificationService {
-    /**
-     * Send wake-up notification to user
-     * @param {string} userId - User ID to notify
-     * @param {object} challengeData - Challenge data
-     * @returns {Promise<boolean>} - True if sent successfully
-     */
     async sendWakeUpNotification(userId, challengeData) {
         try {
             const messaging = getMessaging();
@@ -29,7 +20,6 @@ class NotificationService {
 
             const { challenger, gameType, challengeId } = challengeData;
 
-            // Build notification payload
             const message = {
                 notification: {
                     title: 'Game Challenge!',
@@ -43,7 +33,6 @@ class NotificationService {
                     gameType,
                     timestamp: Date.now().toString(),
                 },
-                // Android-specific configuration
                 android: {
                     priority: 'high',
                     notification: {
@@ -52,16 +41,14 @@ class NotificationService {
                         sound: 'default',
                         defaultSound: true,
                         defaultVibrateTimings: true,
-                        // Full-screen intent for when app is killed
                         visibility: 'public',
                         tag: `challenge_${challengeId}`,
                     },
-                    ttl: 30000, // 30 seconds
+                    ttl: 30000,
                 },
-                // iOS-specific configuration
                 apns: {
                     headers: {
-                        'apns-priority': '10', // High priority
+                        'apns-priority': '10',
                         'apns-push-type': 'alert',
                     },
                     payload: {
@@ -72,14 +59,13 @@ class NotificationService {
                             },
                             sound: 'default',
                             badge: 1,
-                            'interruption-level': 'critical', // iOS 15+ critical alerts
+                            'interruption-level': 'critical',
                             'content-available': 1,
                         },
                     },
                 },
             };
 
-            // Send to all device tokens
             const invalidTokens = [];
             let successCount = 0;
 
@@ -91,7 +77,6 @@ class NotificationService {
                 } catch (error) {
                     logger.error(`Failed to send notification to token ${token.substring(0, 20)}...:`, error.message);
 
-                    // Check if token is invalid
                     if (
                         error.code === 'messaging/invalid-registration-token' ||
                         error.code === 'messaging/registration-token-not-registered'
@@ -101,7 +86,6 @@ class NotificationService {
                 }
             }
 
-            // Remove invalid tokens
             if (invalidTokens.length > 0) {
                 logger.info(`Removing ${invalidTokens.length} invalid tokens for user ${userId}`);
                 for (const token of invalidTokens) {
@@ -116,11 +100,6 @@ class NotificationService {
         }
     }
 
-    /**
-     * Register device token for a user
-     * @param {string} userId - User ID
-     * @param {string} token - FCM device token
-     */
     async registerDeviceToken(userId, token) {
         try {
             const user = await User.findByPk(userId);
@@ -137,11 +116,6 @@ class NotificationService {
         }
     }
 
-    /**
-     * Unregister device token
-     * @param {string} userId - User ID
-     * @param {string} token - FCM device token
-     */
     async unregisterDeviceToken(userId, token) {
         try {
             const user = await User.findByPk(userId);
@@ -158,13 +132,6 @@ class NotificationService {
         }
     }
 
-    /**
-     * Send generic notification
-     * @param {string} userId - User ID
-     * @param {string} title - Notification title
-     * @param {string} body - Notification body
-     * @param {object} data - Additional data
-     */
     async sendNotification(userId, title, body, data = {}) {
         try {
             const messaging = getMessaging();

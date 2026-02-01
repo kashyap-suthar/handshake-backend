@@ -2,9 +2,6 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 const { SESSION_STATES } = require('../utils/constants');
 
-/**
- * Session model
- */
 const Session = sequelize.define('Session', {
     id: {
         type: DataTypes.UUID,
@@ -64,16 +61,10 @@ const Session = sequelize.define('Session', {
     ],
 });
 
-/**
- * Instance methods
- */
-
-// Check if user is in session
 Session.prototype.hasPlayer = function (userId) {
     return this.players.includes(userId);
 };
 
-// End session
 Session.prototype.endSession = async function (state = SESSION_STATES.COMPLETED, metadata = {}) {
     this.state = state;
     this.endedAt = new Date();

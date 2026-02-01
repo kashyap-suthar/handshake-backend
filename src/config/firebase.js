@@ -3,12 +3,8 @@ const logger = require('../utils/logger');
 
 let firebaseApp = null;
 
-/**
- * Initialize Firebase Admin SDK
- */
 const initializeFirebase = () => {
     try {
-        // Check if already initialized
         if (firebaseApp) {
             return firebaseApp;
         }
@@ -38,9 +34,6 @@ const initializeFirebase = () => {
     }
 };
 
-/**
- * Get Firebase messaging instance
- */
 const getMessaging = () => {
     if (!firebaseApp) {
         initializeFirebase();

@@ -4,19 +4,12 @@ const ChallengeService = require('../services/ChallengeService');
 const { DEFAULTS } = require('../utils/constants');
 const logger = require('../utils/logger');
 
-/**
- * Job Queue Manager - Manage all background jobs
- */
 class JobQueueManager {
     constructor() {
         this.setupProcessors();
     }
 
-    /**
-     * Set up job processors
-     */
     setupProcessors() {
-        // Timeout job processor
         timeoutQueue.process(async (job) => {
             const { challengeId, attemptNumber } = job.data;
 
@@ -31,15 +24,11 @@ class JobQueueManager {
             }
         });
 
-        // Cleanup job processor
         cleanupQueue.process(async (job) => {
             logger.info('Processing challenge cleanup job');
 
             try {
-                // Mark expired challenges
                 const expiredCount = await ChallengeService.markExpiredChallenges();
-
-                // Delete old challenges (older than 30 days)
                 const deletedCount = await ChallengeService.deleteOldChallenges(30);
 
                 logger.info(`Cleanup completed: ${expiredCount} expired, ${deletedCount} deleted`);
@@ -58,14 +47,9 @@ class JobQueueManager {
         logger.info('✓ Job processors configured');
     }
 
-    /**
-     * Schedule timeout job for a challenge
-     * @param {string} challengeId - Challenge ID
-     * @param {number} attemptNumber - Attempt number
-     */
     async scheduleTimeoutJob(challengeId, attemptNumber) {
         try {
-            const delay = DEFAULTS.HANDSHAKE_TIMEOUT_SECONDS * 1000; // Convert to milliseconds
+            const delay = DEFAULTS.HANDSHAKE_TIMEOUT_SECONDS * 1000;
 
             await timeoutQueue.add(
                 {
@@ -86,11 +70,6 @@ class JobQueueManager {
         }
     }
 
-    /**
-     * Cancel timeout job for a challenge
-     * @param {string} challengeId - Challenge ID
-     * @param {number} attemptNumber - Attempt number
-     */
     async cancelTimeoutJob(challengeId, attemptNumber) {
         try {
             const jobId = `timeout-${challengeId}-${attemptNumber}`;
@@ -109,18 +88,13 @@ class JobQueueManager {
         }
     }
 
-    /**
-     * Schedule recurring cleanup job
-     * Schedule to run every 5 minutes
-     */
     async scheduleCleanupJob() {
         try {
-            // Add repeatable job (cron-like)
             await cleanupQueue.add(
                 {},
                 {
                     repeat: {
-                        cron: '*/5 * * * *', // Every 5 minutes
+                        cron: '*/5 * * * *',
                     },
                     jobId: 'challenge-cleanup',
                 },
@@ -132,9 +106,6 @@ class JobQueueManager {
         }
     }
 
-    /**
-     * Get queue statistics
-     */
     async getStats() {
         try {
             const [timeoutCounts, cleanupCounts] = await Promise.all([
@@ -153,10 +124,8 @@ class JobQueueManager {
     }
 }
 
-// Export singleton instance
 const queueManager = new JobQueueManager();
 
-// Inject queue manager into HandshakeService
 HandshakeService.setQueueManager(queueManager);
 
 module.exports = queueManager;

@@ -4,21 +4,9 @@ const { NotFoundError, ValidationError } = require('../utils/errors');
 const logger = require('../utils/logger');
 const notificationService = require('./NotificationService');
 
-/**
- * Challenge Service - CRUD operations for challenges
- */
 class ChallengeService {
-    /**
-     * Create a new challenge
-     * @param {string} challengerId - User creating the challenge
-     * @param {string} challengedId - User being challenged
-     * @param {string} gameType - Type of game
-     * @param {object} metadata - Additional metadata
-     * @returns {Promise<Challenge>} - Created challenge
-     */
     async createChallenge(challengerId, challengedId, gameType, metadata = {}) {
         try {
-            // Validate users exist
             const [challenger, challenged] = await Promise.all([
                 User.findByPk(challengerId),
                 User.findByPk(challengedId),
@@ -36,12 +24,10 @@ class ChallengeService {
                 throw new ValidationError('Cannot challenge yourself');
             }
 
-            // Calculate expiration time
             const expiresAt = new Date(
                 Date.now() + DEFAULTS.CHALLENGE_EXPIRATION_SECONDS * 1000,
             );
 
-            // Create challenge
             const challenge = await Challenge.create({
                 challengerId,
                 challengedId,
@@ -53,7 +39,6 @@ class ChallengeService {
 
             logger.info(`Challenge created: ${challenge.id} (${challenger.username} → ${challenged.username})`);
 
-            // Emit WebSocket event to notify challenged user
             try {
                 const { io } = require('../server');
                 if (io) {
@@ -67,16 +52,13 @@ class ChallengeService {
                         createdAt: challenge.createdAt,
                     };
 
-                    // Emit to challenged user's room
                     io.to(`user:${challengedId}`).emit('challenge:received', eventData);
                     logger.debug(`Emitted challenge:received event to user:${challengedId}`);
                 }
             } catch (socketError) {
-                // Don't fail challenge creation if socket emission fails
                 logger.warn('Failed to emit challenge:received event:', socketError.message);
             }
 
-            // Send push notification to challenged user (works even if app is killed)
             try {
                 await notificationService.sendWakeUpNotification(challengedId, {
                     challengeId: challenge.id,
@@ -88,7 +70,6 @@ class ChallengeService {
                 });
                 logger.debug(`Push notification sent to user:${challengedId}`);
             } catch (notificationError) {
-                // Don't fail challenge creation if notification fails
                 logger.warn('Failed to send push notification:', notificationError.message);
             }
 
@@ -99,12 +80,6 @@ class ChallengeService {
         }
     }
 
-    /**
-     * Get challenge by ID
-     * @param {string} challengeId - Challenge ID
-     * @param {boolean} includeUsers - Include challenger and challenged user data
-     * @returns {Promise<Challenge>} - Challenge
-     */
     async getChallenge(challengeId, includeUsers = false) {
         try {
             const options = {
@@ -131,12 +106,6 @@ class ChallengeService {
         }
     }
 
-    /**
-     * Get pending challenges for a user
-     * @param {string} userId - User ID
-     * @param {number} limit - Max results
-     * @returns {Promise<Challenge[]>} - Array of challenges
-     */
     async getPendingChallenges(userId, limit = 20) {
         try {
             const challenges = await Challenge.findAll({
@@ -158,17 +127,10 @@ class ChallengeService {
         }
     }
 
-    /**
-     * Update challenge state
-     * @param {string} challengeId - Challenge ID
-     * @param {string} newState - New state
-     * @returns {Promise<Challenge>} - Updated challenge
-     */
     async updateChallengeState(challengeId, newState) {
         try {
             const challenge = await this.getChallenge(challengeId);
 
-            // Validate state transition
             if (!challenge.canTransitionTo(newState)) {
                 throw new ValidationError(
                     `Cannot transition challenge from ${challenge.state} to ${newState}`,
@@ -185,11 +147,6 @@ class ChallengeService {
         }
     }
 
-    /**
-     * Increment notification attempt count
-     * @param {string} challengeId - Challenge ID
-     * @returns {Promise<Challenge>} - Updated challenge
-     */
     async incrementNotificationAttempt(challengeId) {
         try {
             const challenge = await this.getChallenge(challengeId);
@@ -203,10 +160,6 @@ class ChallengeService {
         }
     }
 
-    /**
-     * Mark expired challenges
-     * @returns {Promise<number>} - Number of challenges marked as expired
-     */
     async markExpiredChallenges() {
         try {
             const [affectedCount] = await Challenge.update(
@@ -232,11 +185,6 @@ class ChallengeService {
         }
     }
 
-    /**
-     * Delete old challenges (cleanup)
-     * @param {number} daysOld - Delete challenges older than this many days
-     * @returns {Promise<number>} - Number of challenges deleted
-     */
     async deleteOldChallenges(daysOld = 30) {
         try {
             const cutoffDate = new Date();

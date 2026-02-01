@@ -1,9 +1,6 @@
 const { body, param, query, validationResult } = require('express-validator');
 const { ValidationError } = require('../utils/errors');
 
-/**
- * Validation result handler
- */
 const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
 
@@ -14,10 +11,6 @@ const handleValidationErrors = (req, res, next) => {
 
     next();
 };
-
-/**
- * Validation schemas
- */
 
 const validateRegister = [
     body('username')

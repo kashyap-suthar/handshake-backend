@@ -3,7 +3,6 @@ require('winston-daily-rotate-file');
 
 const { combine, timestamp, printf, colorize, errors } = winston.format;
 
-// Custom log format
 const logFormat = printf(({ level, message, timestamp: ts, stack }) => {
     if (stack) {
         return `${ts} [${level}]: ${message}\n${stack}`;
@@ -11,7 +10,6 @@ const logFormat = printf(({ level, message, timestamp: ts, stack }) => {
     return `${ts} [${level}]: ${message}`;
 });
 
-// File rotation transport
 const fileRotateTransport = new winston.transports.DailyRotateFile({
     filename: `${process.env.LOG_FILE_PATH || './logs'}/handshake-%DATE%.log`,
     datePattern: 'YYYY-MM-DD',
@@ -24,7 +22,6 @@ const fileRotateTransport = new winston.transports.DailyRotateFile({
     ),
 });
 
-// Console transport with colors
 const consoleTransport = new winston.transports.Console({
     format: combine(
         colorize(),
@@ -34,7 +31,6 @@ const consoleTransport = new winston.transports.Console({
     ),
 });
 
-// Create logger
 const logger = winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
     transports: [
@@ -44,5 +40,4 @@ const logger = winston.createLogger({
     exitOnError: false,
 });
 
-// Export logger
 module.exports = logger;

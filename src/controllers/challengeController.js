@@ -3,9 +3,6 @@ const HandshakeService = require('../services/HandshakeService');
 const logger = require('../utils/logger');
 const { CHALLENGE_STATES } = require('../utils/constants');
 
-/**
- * Create a new challenge
- */
 const createChallenge = async (req, res, next) => {
     try {
         const { challengedId, gameType, metadata } = req.body;
@@ -27,9 +24,6 @@ const createChallenge = async (req, res, next) => {
     }
 };
 
-/**
- * Accept a challenge (triggers handshake)
- */
 const acceptChallenge = async (req, res, next) => {
     try {
         const { id: challengeId } = req.params;
@@ -37,7 +31,6 @@ const acceptChallenge = async (req, res, next) => {
 
         logger.info(`User ${req.user.username} accepting challenge ${challengeId}`);
 
-        // Initiate handshake flow
         const result = await HandshakeService.initiateHandshake(challengeId, acceptedBy);
 
         res.json({
@@ -50,10 +43,6 @@ const acceptChallenge = async (req, res, next) => {
     }
 };
 
-/**
- * Respond to wake-up notification (Accept/Decline)
- * This is an alternative to the WebSocket event for HTTP-only clients
- */
 const respondToChallenge = async (req, res, next) => {
     try {
         const { id: challengeId } = req.params;
@@ -75,9 +64,6 @@ const respondToChallenge = async (req, res, next) => {
     }
 };
 
-/**
- * Get challenge details
- */
 const getChallenge = async (req, res, next) => {
     try {
         const { id: challengeId } = req.params;
@@ -93,9 +79,6 @@ const getChallenge = async (req, res, next) => {
     }
 };
 
-/**
- * Get pending challenges for current user
- */
 const getPendingChallenges = async (req, res, next) => {
     try {
         const userId = req.user.id;
@@ -115,9 +98,6 @@ const getPendingChallenges = async (req, res, next) => {
     }
 };
 
-/**
- * Decline a challenge (by challenged user)
- */
 const declineChallenge = async (req, res, next) => {
     try {
         const { id: challengeId } = req.params;
@@ -125,10 +105,8 @@ const declineChallenge = async (req, res, next) => {
 
         logger.info(`User ${req.user.username} declining challenge ${challengeId}`);
 
-        // Get challenge to validate
         const challenge = await ChallengeService.getChallenge(challengeId, true);
 
-        // Validate user is the challenged user
         if (challenge.challengedId !== userId) {
             return res.status(403).json({
                 success: false,
@@ -136,7 +114,6 @@ const declineChallenge = async (req, res, next) => {
             });
         }
 
-        // Validate state allows decline
         if (challenge.state !== CHALLENGE_STATES.PENDING) {
             return res.status(400).json({
                 success: false,
@@ -144,10 +121,8 @@ const declineChallenge = async (req, res, next) => {
             });
         }
 
-        // Update state to declined
         await ChallengeService.updateChallengeState(challengeId, CHALLENGE_STATES.DECLINED);
 
-        // Notify challenger via WebSocket
         try {
             const { io } = require('../server');
             if (io) {

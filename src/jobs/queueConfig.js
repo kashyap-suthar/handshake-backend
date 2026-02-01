@@ -3,12 +3,6 @@ const { redisClient } = require('../config/redis');
 const { JOB_QUEUES } = require('../utils/constants');
 const logger = require('../utils/logger');
 
-/**
- * Create Bull queue
- * @param {string} name - Queue name
- * @param {object} options - Queue options
- * @returns {object} - Bull queue instance
- */
 const createQueue = (name, options = {}) => {
     const defaultOptions = {
         redis: {
@@ -23,14 +17,13 @@ const createQueue = (name, options = {}) => {
                 type: 'exponential',
                 delay: 2000,
             },
-            removeOnComplete: 100, // Keep last 100 completed jobs
-            removeOnFail: 500, // Keep last 500 failed jobs
+            removeOnComplete: 100,
+            removeOnFail: 500,
         },
     };
 
     const queue = new Bull(name, { ...defaultOptions, ...options });
 
-    // Event listeners
     queue.on('error', (error) => {
         logger.error(`Queue ${name} error:`, error);
     });
@@ -48,13 +41,9 @@ const createQueue = (name, options = {}) => {
     return queue;
 };
 
-// Create queues
 const timeoutQueue = createQueue(JOB_QUEUES.HANDSHAKE_TIMEOUT);
 const cleanupQueue = createQueue(JOB_QUEUES.CHALLENGE_CLEANUP);
 
-/**
- * Close all queues gracefully
- */
 const closeQueues = async () => {
     logger.info('Closing job queues...');
     await Promise.all([

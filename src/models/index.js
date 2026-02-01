@@ -2,11 +2,6 @@ const User = require('./User');
 const Challenge = require('./Challenge');
 const Session = require('./Session');
 
-/**
- * Define model associations
- */
-
-// User <-> Challenge relationships
 User.hasMany(Challenge, {
     foreignKey: 'challengerId',
     as: 'challengesCreated',
@@ -27,7 +22,6 @@ Challenge.belongsTo(User, {
     as: 'challenged',
 });
 
-// Challenge <-> Session relationship
 Challenge.hasOne(Session, {
     foreignKey: 'challengeId',
     as: 'session',

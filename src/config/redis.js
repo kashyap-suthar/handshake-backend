@@ -1,7 +1,6 @@
 const Redis = require('ioredis');
 const logger = require('../utils/logger');
 
-// Create Redis client
 const redisClient = new Redis({
     host: process.env.REDIS_HOST || 'localhost',
     port: process.env.REDIS_PORT || 6379,
@@ -15,7 +14,6 @@ const redisClient = new Redis({
     maxRetriesPerRequest: 3,
 });
 
-// Event handlers
 redisClient.on('connect', () => {
     logger.info('✓ Redis client connecting...');
 });
@@ -36,9 +34,6 @@ redisClient.on('reconnecting', () => {
     logger.warn('⚠ Redis client reconnecting...');
 });
 
-/**
- * Test Redis connection
- */
 const testRedisConnection = async () => {
     try {
         await redisClient.ping();
@@ -50,9 +45,6 @@ const testRedisConnection = async () => {
     }
 };
 
-/**
- * Close Redis connection
- */
 const closeRedisConnection = async () => {
     try {
         await redisClient.quit();

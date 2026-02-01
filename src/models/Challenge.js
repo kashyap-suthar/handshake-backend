@@ -2,9 +2,6 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 const { CHALLENGE_STATES, CHALLENGE_STATE_TRANSITIONS } = require('../utils/constants');
 
-/**
- * Challenge model
- */
 const Challenge = sequelize.define('Challenge', {
     id: {
         type: DataTypes.UUID,
@@ -70,17 +67,11 @@ const Challenge = sequelize.define('Challenge', {
     ],
 });
 
-/**
- * Instance methods
- */
-
-// Validate state transition
 Challenge.prototype.canTransitionTo = function (newState) {
     const allowedTransitions = CHALLENGE_STATE_TRANSITIONS[this.state] || [];
     return allowedTransitions.includes(newState);
 };
 
-// Transition to new state
 Challenge.prototype.transitionTo = async function (newState) {
     if (!this.canTransitionTo(newState)) {
         throw new Error(
@@ -91,14 +82,12 @@ Challenge.prototype.transitionTo = async function (newState) {
     await this.save();
 };
 
-// Increment notification attempt
 Challenge.prototype.incrementNotificationAttempt = async function () {
     this.notificationAttempts += 1;
     this.lastNotificationAt = new Date();
     await this.save();
 };
 
-// Check if expired
 Challenge.prototype.isExpired = function () {
     return new Date() > this.expiresAt;
 };

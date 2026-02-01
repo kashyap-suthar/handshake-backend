@@ -1,7 +1,6 @@
 const { Sequelize } = require('sequelize');
 const logger = require('../utils/logger');
 
-// Database configuration
 const sequelize = new Sequelize(process.env.DATABASE_URL || {
     dialect: 'postgres',
     host: process.env.DB_HOST || 'localhost',
@@ -22,9 +21,6 @@ const sequelize = new Sequelize(process.env.DATABASE_URL || {
     },
 });
 
-/**
- * Test database connection
- */
 const testConnection = async () => {
     try {
         await sequelize.authenticate();
@@ -36,10 +32,6 @@ const testConnection = async () => {
     }
 };
 
-/**
- * Sync database models
- * @param {boolean} force - Force sync (drops tables)
- */
 const syncDatabase = async (force = false) => {
     try {
         await sequelize.sync({ force, alter: !force });
@@ -50,9 +42,6 @@ const syncDatabase = async (force = false) => {
     }
 };
 
-/**
- * Close database connection
- */
 const closeConnection = async () => {
     try {
         await sequelize.close();

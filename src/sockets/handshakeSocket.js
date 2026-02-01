@@ -4,18 +4,11 @@ const HandshakeService = require('../services/HandshakeService');
 const { SOCKET_EVENTS, HANDSHAKE_RESPONSE } = require('../utils/constants');
 const logger = require('../utils/logger');
 
-/**
- * Setup Socket.IO event handlers for handshake flow
- * @param {object} io - Socket.IO instance
- */
 const setupHandshakeSocket = (io) => {
-    // Set Socket.IO instance in HandshakeService
     HandshakeService.setSocketIO(io);
 
-    // Authentication middleware
     io.use(authenticateSocket);
 
-    // Connection handler
     io.on(SOCKET_EVENTS.CONNECTION, async (socket) => {
         const userId = socket.userId;
         const username = socket.username;
@@ -23,14 +16,11 @@ const setupHandshakeSocket = (io) => {
         logger.info(`🔌 Socket connected: ${socket.id} (User: ${username})`);
 
         try {
-            // Set user online
             await PresenceService.setUserOnline(userId, socket.id);
 
-            // Join user-specific room
             socket.join(`user:${userId}`);
             logger.debug(`User ${username} joined room: user:${userId}`);
 
-            // Emit connection success
             socket.emit('connected', {
                 success: true,
                 userId,
@@ -41,9 +31,6 @@ const setupHandshakeSocket = (io) => {
             logger.error(`Error in connection handler for user ${userId}:`, error);
         }
 
-        /**
-         * Heartbeat event - keep presence alive
-         */
         socket.on(SOCKET_EVENTS.HEARTBEAT, async () => {
             try {
                 await PresenceService.heartbeat(userId);
@@ -53,17 +40,12 @@ const setupHandshakeSocket = (io) => {
             }
         });
 
-        /**
-         * Challenge response event - Player A responds to wake-up
-         * Payload: { challengeId, response: 'ACCEPT' | 'DECLINE' }
-         */
         socket.on(SOCKET_EVENTS.CHALLENGE_RESPOND, async (data) => {
             try {
                 const { challengeId, response } = data;
 
                 logger.info(`📨 Challenge response from ${username}: ${response} for challenge ${challengeId}`);
 
-                // Validate response
                 if (!Object.values(HANDSHAKE_RESPONSE).includes(response)) {
                     socket.emit(SOCKET_EVENTS.ERROR, {
                         error: 'Invalid response. Must be ACCEPT or DECLINE',
@@ -71,14 +53,12 @@ const setupHandshakeSocket = (io) => {
                     return;
                 }
 
-                // Handle response
                 const result = await HandshakeService.handleWakeUpResponse(
                     challengeId,
                     userId,
                     response,
                 );
 
-                // Send acknowledgment
                 socket.emit('challenge:respond-ack', {
                     success: true,
                     ...result,
@@ -91,10 +71,6 @@ const setupHandshakeSocket = (io) => {
             }
         });
 
-        /**
-         * Session join event - Player joins session room
-         * Payload: { sessionId }
-         */
         socket.on(SOCKET_EVENTS.SESSION_JOIN, async (data) => {
             try {
                 const { sessionId } = data;
@@ -114,10 +90,6 @@ const setupHandshakeSocket = (io) => {
             }
         });
 
-        /**
-         * Session leave event - Player leaves session room
-         * Payload: { sessionId }
-         */
         socket.on(SOCKET_EVENTS.SESSION_LEAVE, async (data) => {
             try {
                 const { sessionId } = data;
@@ -134,9 +106,6 @@ const setupHandshakeSocket = (io) => {
             }
         });
 
-        /**
-         * Disconnect handler
-         */
         socket.on(SOCKET_EVENTS.DISCONNECT, async (reason) => {
             logger.info(`🔌 Socket disconnected: ${socket.id} (User: ${username}, Reason: ${reason})`);
 
@@ -147,15 +116,11 @@ const setupHandshakeSocket = (io) => {
             }
         });
 
-        /**
-         * Error handler
-         */
         socket.on('error', (error) => {
             logger.error(`Socket error for user ${userId}:`, error);
         });
     });
 
-    // Connection error handler
     io.engine.on('connection_error', (err) => {
         logger.error('Socket.IO connection error:', err);
     });

@@ -2,24 +2,18 @@ const jwt = require('jsonwebtoken');
 const { UnauthorizedError } = require('../utils/errors');
 const logger = require('../utils/logger');
 
-/**
- * JWT Authentication Middleware for REST API
- */
 const authenticateJWT = async (req, res, next) => {
     try {
-        // Get token from Authorization header
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             throw new UnauthorizedError('No token provided');
         }
 
-        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+        const token = authHeader.substring(7);
 
-        // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Attach user info to request
         req.user = {
             id: decoded.userId,
             username: decoded.username,
@@ -37,12 +31,8 @@ const authenticateJWT = async (req, res, next) => {
     }
 };
 
-/**
- * Socket.IO Authentication Middleware
- */
 const authenticateSocket = async (socket, next) => {
     try {
-        // Get token from handshake query or auth object
         const token = socket.handshake.auth.token || socket.handshake.query.token;
 
         if (!token) {
@@ -50,10 +40,8 @@ const authenticateSocket = async (socket, next) => {
             return next(new Error('Authentication error: No token provided'));
         }
 
-        // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Attach user info to socket
         socket.userId = decoded.userId;
         socket.username = decoded.username;
 
@@ -73,11 +61,6 @@ const authenticateSocket = async (socket, next) => {
     }
 };
 
-/**
- * Generate JWT token
- * @param {object} user - User object
- * @returns {string} - JWT token
- */
 const generateToken = (user) => {
     return jwt.sign(
         {

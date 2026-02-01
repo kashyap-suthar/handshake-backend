@@ -4,11 +4,6 @@ const { redisClient } = require('./redis');
 const Redis = require('ioredis');
 const logger = require('../utils/logger');
 
-/**
- * Initialize Socket.IO server with Redis adapter
- * @param {object} httpServer - HTTP server instance
- * @returns {object} - Socket.IO instance
- */
 const initializeSocketIO = (httpServer) => {
     const io = new Server(httpServer, {
         cors: {
@@ -21,7 +16,6 @@ const initializeSocketIO = (httpServer) => {
         pingInterval: 25000,
     });
 
-    // Set up Redis adapter for horizontal scaling
     try {
         const pubClient = redisClient;
         const subClient = pubClient.duplicate();

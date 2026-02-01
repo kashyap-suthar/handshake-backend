@@ -2,9 +2,6 @@ const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const { sequelize } = require('../config/database');
 
-/**
- * User model
- */
 const User = sequelize.define('User', {
     id: {
         type: DataTypes.UUID,
@@ -62,16 +59,10 @@ const User = sequelize.define('User', {
     },
 });
 
-/**
- * Instance methods
- */
-
-// Compare password
 User.prototype.comparePassword = async function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Add device token
 User.prototype.addDeviceToken = async function (token) {
     if (!this.deviceTokens.includes(token)) {
         this.deviceTokens = [...this.deviceTokens, token];
@@ -79,13 +70,11 @@ User.prototype.addDeviceToken = async function (token) {
     }
 };
 
-// Remove device token
 User.prototype.removeDeviceToken = async function (token) {
     this.deviceTokens = this.deviceTokens.filter((t) => t !== token);
     await this.save();
 };
 
-// Get public profile (without password)
 User.prototype.toJSON = function () {
     const values = { ...this.get() };
     delete values.password;

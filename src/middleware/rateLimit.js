@@ -3,13 +3,10 @@ const RedisStore = require('rate-limit-redis');
 const { redisClient } = require('../config/redis');
 const logger = require('../utils/logger');
 
-/**
- * Create rate limiter with Redis store for distributed rate limiting
- */
 const createRateLimiter = (options = {}) => {
     const defaultOptions = {
-        windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000, // 15 minutes
-        max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100, // 100 requests per window
+        windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
+        max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
         standardHeaders: true,
         legacyHeaders: false,
         message: 'Too many requests, please try again later',
@@ -21,12 +18,10 @@ const createRateLimiter = (options = {}) => {
             });
         },
         skip: (req) => {
-            // Skip rate limiting in test environment
             return process.env.NODE_ENV === 'test';
         },
     };
 
-    // Use Redis store if available
     try {
         return rateLimit({
             ...defaultOptions,
@@ -45,20 +40,17 @@ const createRateLimiter = (options = {}) => {
     }
 };
 
-// Default rate limiter for general API endpoints
 const apiLimiter = createRateLimiter();
 
-// Stricter rate limiter for authentication endpoints
 const authLimiter = createRateLimiter({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 requests per window
+    windowMs: 15 * 60 * 1000,
+    max: 5,
     message: 'Too many authentication attempts, please try again later',
 });
 
-// Rate limiter for challenge creation
 const challengeLimiter = createRateLimiter({
-    windowMs: 60 * 1000, // 1 minute
-    max: 10, // 10 challenges per minute
+    windowMs: 60 * 1000,
+    max: 10,
     message: 'Too many challenges created, please slow down',
 });
 
